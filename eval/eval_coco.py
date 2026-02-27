@@ -139,7 +139,8 @@ def main():
     parser.add_argument('--coco_root', type=str, default='data/coco', help='Path to COCO dataset')
     parser.add_argument('--output_dir', type=str, default='output', help='Directory containing models')
     parser.add_argument('--num_samples', type=int, default=-1, help='Number of samples to evaluate')
-    parser.add_argument('--device', type=str, default='cuda' if torch.cuda.is_available() else 'cpu')
+    from sam3.device import get_device
+    parser.add_argument('--device', type=str, default=str(get_device()))
     args = parser.parse_args()
 
     models_dir = args.output_dir
