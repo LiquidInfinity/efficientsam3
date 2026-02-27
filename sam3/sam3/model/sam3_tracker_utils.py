@@ -11,46 +11,16 @@ except ImportError:
     edt_triton = None  # Triton not available (e.g. macOS)
 
 
-def _edt_pytorch_fallback(masks: torch.Tensor) -> torch.Tensor:
-    """Pure PyTorch approximation of euclidean distance transform.
+def _edt_scipy(masks: torch.Tensor) -> torch.Tensor:
+    """Euclidean distance transform using scipy (fallback for non-CUDA platforms)."""
+    from scipy.ndimage import distance_transform_edt
 
-    This is a simple fallback for non-CUDA platforms where Triton is unavailable.
-    It uses iterative dilation to approximate the EDT.
-    """
-    # masks: (B, H, W) binary tensor where 1 = foreground
     B, H, W = masks.shape
-    # For zero masks return zeros
     result = torch.zeros_like(masks, dtype=torch.float32)
-    # Distance transform: for each foreground pixel, distance to nearest background
-    # Use scipy if available, otherwise use a simple iterative approach
-    try:
-        from scipy.ndimage import distance_transform_edt
-
-        masks_np = masks.cpu().numpy()
-        for b in range(B):
-            dt = distance_transform_edt(masks_np[b])
-            result[b] = torch.from_numpy(dt).to(result.device)
-    except ImportError:
-        # Fallback: approximate with iterative erosion
-        for b in range(B):
-            mask = masks[b].float()
-            dist = torch.zeros_like(mask)
-            remaining = mask.clone()
-            d = 0
-            while remaining.any():
-                d += 1
-                # Erode using max-pool of inverted mask
-                eroded = F.max_pool2d(
-                    (1 - remaining).unsqueeze(0).unsqueeze(0),
-                    kernel_size=3, stride=1, padding=1
-                ).squeeze(0).squeeze(0)
-                eroded = 1 - eroded
-                newly_removed = remaining * (1 - eroded)
-                dist += newly_removed * d
-                remaining = remaining * eroded
-                if d > max(H, W):
-                    break
-            result[b] = dist
+    masks_np = masks.cpu().numpy()
+    for b in range(B):
+        dt = distance_transform_edt(masks_np[b])
+        result[b] = torch.from_numpy(dt).to(result.device)
     return result
 
 
@@ -221,7 +191,7 @@ def sample_one_point_from_error_center(gt_masks, pred_masks, padding=True):
         padded_fp_masks = fp_masks
         padded_fn_masks = fn_masks
 
-    _edt_fn = edt_triton if edt_triton is not None else _edt_pytorch_fallback
+    _edt_fn = edt_triton if edt_triton is not None else _edt_scipy
     fn_mask_dt = _edt_fn(padded_fn_masks)
     fp_mask_dt = _edt_fn(padded_fp_masks)
     if padding:

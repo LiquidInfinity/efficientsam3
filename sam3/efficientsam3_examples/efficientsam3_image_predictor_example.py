@@ -112,8 +112,8 @@ def main():
     width, height = image_pil.size
     print(f"Image Size: {width}x{height}")
     
-    from sam3.device import get_autocast_device_type
-    dtype_context = torch.autocast(get_autocast_device_type(device), dtype=torch.bfloat16) if device.type == "cuda" else torch.no_grad()
+    from sam3.device import get_autocast_device_type, get_autocast_dtype
+    dtype_context = torch.autocast(get_autocast_device_type(device), dtype=get_autocast_dtype(device)) if device.type in ("cuda", "mps") else torch.no_grad()
     
     with dtype_context:
         print(f"Using confidence threshold: {args.threshold}")

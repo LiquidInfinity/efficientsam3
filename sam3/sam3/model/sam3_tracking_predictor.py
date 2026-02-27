@@ -50,10 +50,11 @@ class Sam3TrackerPredictor(Sam3TrackerBase):
         # (Avoid creating an autocast context on CPU-only environments.)
         self.bf16_context = None
         if torch.cuda.is_available() or torch.backends.mps.is_available():
-            from sam3.device import get_autocast_device_type, get_device
-            autocast_device = get_autocast_device_type(get_device())
+            from sam3.device import get_autocast_device_type, get_autocast_dtype, get_device
+            device = get_device()
             self.bf16_context = torch.autocast(
-                device_type=autocast_device, dtype=torch.bfloat16
+                device_type=get_autocast_device_type(device),
+                dtype=get_autocast_dtype(device),
             )
             self.bf16_context.__enter__()  # keep using for the entire model process
 
@@ -690,8 +691,6 @@ class Sam3TrackerPredictor(Sam3TrackerBase):
             image=image,
             point_inputs=None,
             mask_inputs=mask_inputs,
-            gt_masks=None,
-            frames_to_add_correction_pt=[],
             output_dict={
                 "cond_frame_outputs": {},
                 "non_cond_frame_outputs": {},

@@ -9,7 +9,7 @@ import torch.distributed as dist
 import torch.nn.functional as F
 
 from sam3 import perflib
-from sam3.device import get_autocast_device_type
+from sam3.device import get_autocast_device_type, get_autocast_dtype
 from sam3.logger import get_logger
 from sam3.model.act_ckpt_utils import clone_output_wrapper
 from sam3.model.box_ops import box_xywh_to_cxcywh, box_xyxy_to_xywh
@@ -918,7 +918,7 @@ class Sam3VideoInference(Sam3VideoBase):
         """This method is only used for benchmark eval (not used in the demo)."""
         autocast_ctx = torch.autocast(
             device_type=get_autocast_device_type(self.device),
-            dtype=torch.bfloat16,
+            dtype=get_autocast_dtype(self.device),
         )
         with autocast_ctx:
             return self._forward_impl(input, is_inference)

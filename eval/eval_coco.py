@@ -15,6 +15,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 # Assuming running from root where 'sam3' package is located
 from sam3 import build_efficientsam3_image_model
 from sam3.model.sam3_image_processor import Sam3Processor
+from sam3.device import get_device
 
 def calculate_iou(pred_mask, gt_mask):
     intersection = np.logical_and(pred_mask, gt_mask).sum()
@@ -25,9 +26,12 @@ def calculate_iou(pred_mask, gt_mask):
 
 import time
 
-def evaluate_model(model_path, backbone, model_name, coco_root, split='val2017', num_samples=-1, device='cuda'):
+def evaluate_model(model_path, backbone, model_name, coco_root, split='val2017', num_samples=-1, device=None):
     print(f"Evaluating model: {model_path}")
     start_time = time.time()
+
+    if device is None:
+        device = get_device()
     
     # Load Model
     try:
