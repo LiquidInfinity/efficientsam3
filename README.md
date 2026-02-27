@@ -135,9 +135,11 @@ conda activate efficientsam3
 pip install --upgrade pip
 
 # Install PyTorch (choose one based on your device):
-# - CUDA:    pip install torch==2.7.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
-# - MPS/CPU: pip install torch==2.7.0 torchvision torchaudio
+# CUDA (default):
 pip install torch==2.7.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+
+# MPS/CPU (Apple Silicon or CPU-only):
+pip install torch==2.7.0 torchvision torchaudio
 
 # Install repo dependencies via the root pyproject (brings in SAM3 + Stage-1 extras)
 pip install -e ".[stage1]"
