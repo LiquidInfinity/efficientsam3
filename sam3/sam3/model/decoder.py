@@ -17,6 +17,8 @@ from torchvision.ops.roi_align import RoIAlign
 
 from .act_ckpt_utils import activation_ckpt_wrapper
 
+from sam3.device import get_autocast_device_type
+
 from .box_ops import box_cxcywh_to_xyxy
 
 from .model_misc import (
@@ -71,7 +73,7 @@ class TransformerDecoderLayer(nn.Module):
         return tensor if pos is None else tensor + pos
 
     def forward_ffn(self, tgt):
-        with torch.amp.autocast(device_type=tgt.device.type if tgt.device.type in ("cuda", "mps") else "cpu", enabled=False):
+        with torch.amp.autocast(device_type=get_autocast_device_type(tgt.device), enabled=False):
             tgt2 = self.linear2(self.dropout3(self.activation(self.linear1(tgt))))
         tgt = tgt + self.dropout4(tgt2)
         tgt = self.norm3(tgt)

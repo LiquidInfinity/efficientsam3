@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from sam3.device import get_autocast_device_type
+
 from .act import build_act
 from .norm import build_norm
 from ..utils import get_same_padding, list_sum, resize, val2list, val2tuple
@@ -95,7 +97,7 @@ class UpSampleLayer(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if (self.size is not None and tuple(x.shape[-2:]) == self.size) or self.factor == 1:
             return x
-        device_type = x.device.type if x.device.type == "cuda" else "cpu"
+        device_type = get_autocast_device_type(x.device)
         with torch.autocast(device_type=device_type, enabled=False):
             if x.dtype in [torch.float16, torch.bfloat16]:
                 x = x.float()
